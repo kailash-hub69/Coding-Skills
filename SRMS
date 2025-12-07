@@ -1,0 +1,200 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+const int MAX_STUDENTS = 50;   // Maximum students allowed
+
+// ================= BASE CLASS =================
+class Student {
+protected:
+    string rollNo;
+    string name;
+    int year;
+
+public:
+    Student(const string &roll = "", const string &n = "", int y = 1)
+        : rollNo(roll), name(n), year(y) {}
+
+    virtual ~Student() {}
+
+    string getRoll() const { return rollNo; }
+    string getName() const { return name; }
+    int getYear() const { return year; }
+
+    virtual string getType() const = 0;
+    virtual double calculateFees() const = 0;
+};
+
+// ================= DERIVED CLASSES =================
+class UGStudent : public Student {
+public:
+    UGStudent(const string &roll, const string &n, int y)
+        : Student(roll, n, y) {}
+
+    string getType() const { return "Undergraduate"; }
+
+    double calculateFees() const {
+        double basicFee = 75000.0;
+        return basicFee;
+    }
+};
+
+class PGStudent : public Student {
+public:
+    PGStudent(const string &roll, const string &n, int y)
+        : Student(roll, n, y) {}
+
+    string getType() const { return "Postgraduate"; }
+
+    double calculateFees() const {
+        double basicFee = 120000.0;
+        return basicFee;
+    }
+};
+
+// ================= RECORD MANAGEMENT CLASS =================
+class RecordSystem {
+    Student *students[MAX_STUDENTS];
+    int total;
+
+public:
+    RecordSystem() : total(0) {
+        for (int i = 0; i < MAX_STUDENTS; i++)
+            students[i] = NULL;
+    }
+
+    ~RecordSystem() {
+        for (int i = 0; i < total; i++) {
+            if (students[i] != NULL)
+                delete students[i];
+        }
+    }
+
+    int findStudent(const string &roll) const {
+        for (int i = 0; i < total; i++) {
+            if (students[i] != NULL && students[i]->getRoll() == roll)
+                return i;
+        }
+        return -1;
+    }
+
+    void addStudent(Student *s) {
+        if (total >= MAX_STUDENTS) {
+            cout << "\nDatabase Full. Cannot add more students.\n";
+            return;
+        }
+        students[total++] = s;
+        cout << "\nStudent Record Added Successfully!\n";
+    }
+
+    void removeStudent(const string &roll) {
+        int index = findStudent(roll);
+        if (index == -1) {
+            cout << "\nStudent Not Found!\n";
+            return;
+        }
+
+        cout << "\nStudent Found & Removed: " << students[index]->getName() << "\n";
+        delete students[index];
+
+        for (int i = index; i < total - 1; i++)
+            students[i] = students[i + 1];
+
+        total--;
+    }
+
+    void displayAll() const {
+        cout << "\n===== STUDENT RECORD LIST =====\n";
+        if (total == 0) {
+            cout << "No records available.\n";
+            return;
+        }
+
+        for (int i = 0; i < total; i++) {
+            cout << i + 1 << ". " << students[i]->getName()
+                 << " | Roll: " << students[i]->getRoll()
+                 << " | Type: " << students[i]->getType()
+                 << " | Year: " << students[i]->getYear()
+                 << " | Fees: Rs. " << students[i]->calculateFees() << "\n";
+        }
+    }
+};
+
+// ================= MAIN MENU =================
+int main() {
+    RecordSystem sys;
+    int choice;
+
+    cout << "===========================================\n";
+    cout << " SRM UNIVERSITY - STUDENT RECORD MANAGER\n";
+    cout << "===========================================\n";
+
+    do {
+        cout << "\n----------- MENU -----------\n";
+        cout << "1. Add Student\n";
+        cout << "2. Remove Student\n";
+        cout << "3. Search Student\n";
+        cout << "4. Display All Records\n";
+        cout << "0. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        if (choice == 1) {
+            string type, roll, name;
+            int year;
+
+            cout << "Enter Roll Number: ";
+            cin >> roll;
+
+            cout << "Enter Name: ";
+            cin.ignore();
+            getline(cin, name);
+
+            cout << "Enter Year: ";
+            cin >> year;
+
+            cout << "Select Type (UG / PG or 1 / 2): ";
+            cin >> type;
+
+            for (auto &c : type) c = tolower(c);
+
+            Student *s = NULL;
+            if (type == "ug" || type == "1") {
+                s = new UGStudent(roll, name, year);
+            } else if (type == "pg" || type == "2") {
+                s = new PGStudent(roll, name, year);
+            } else {
+                cout << "Invalid type!\n";
+            }
+
+            if (s != NULL)
+                sys.addStudent(s);
+
+        } else if (choice == 2) {
+            string roll;
+            cout << "Enter Roll Number: ";
+            cin >> roll;
+            sys.removeStudent(roll);
+
+        } else if (choice == 3) {
+            string roll;
+            cout << "Enter Roll Number: ";
+            cin >> roll;
+
+            int index = sys.findStudent(roll);
+            if (index == -1) cout << "Student Not Found!\n";
+            else cout << "Student Exists in Database.\n";
+
+        } else if (choice == 4) {
+            sys.displayAll();
+
+        } else if (choice == 0) {
+            cout << "Exiting system... Thank you!\n";
+
+        } else {
+            cout << "Invalid choice!\n";
+        }
+
+    } while (choice != 0);
+
+    return 0;
+}
